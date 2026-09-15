@@ -1,4 +1,4 @@
-import { Trophy, RefreshCw, Zap, Clock, Target, Check, X } from "lucide-react";
+import { ShieldCheck, RotateCcw, Zap, Clock, Target, Check, X, FileText } from "lucide-react";
 import { SessionMetrics, CardTrial } from "../engine/sessionStateMachine";
 import { MAJOR_SYSTEM_MAPPINGS } from "../domain/majorSystem";
 
@@ -10,120 +10,145 @@ interface ScoreViewProps {
 
 export const ScoreView = ({ metrics, trials, onRestart }: ScoreViewProps) => {
   const accuracyPct = Math.round(metrics.accuracyRate * 100);
+  const isPassing = accuracyPct >= 80;
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
+    <div className="w-full max-w-3xl mx-auto flex flex-col gap-6">
       {/* Header Banner */}
-      <div className="flex flex-col items-center text-center gap-2">
-        <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-1 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-          <Trophy className="w-7 h-7" />
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 shadow-xs flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+            isPassing ? "bg-[#DCFCE7] text-[#16A34A]" : "bg-[#FEF2F2] text-[#DC2626]"
+          }`}>
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-[#1E293B]">
+                Session Evaluation Report
+              </h2>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                isPassing
+                  ? "bg-[#DCFCE7] text-[#16A34A]"
+                  : "bg-[#FEF2F2] text-[#DC2626]"
+              }`}>
+                {isPassing ? "Certified / Verified" : "Needs Review"}
+              </span>
+            </div>
+            <p className="text-xs text-[#64748B] mt-1">
+              Phonetic recall audit log and reflex latency breakdown
+            </p>
+          </div>
         </div>
-        <h2 className="text-3xl font-bold tracking-tight text-neutral-100 font-mono">
-          Session Debrief
-        </h2>
-        <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
-          Trial Telemetry Analysis
-        </p>
       </div>
 
-      {/* Metrics High-Level Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-neutral-900/80 border border-neutral-800 rounded-xl p-4 flex flex-col items-center">
-          <span className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
-            <Target className="w-3 h-3 text-cyan-400" /> Accuracy
+      {/* Metrics Summary Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 flex flex-col shadow-xs">
+          <span className="text-xs font-semibold text-[#64748B] flex items-center gap-1.5 uppercase tracking-wider">
+            <Target className="w-3.5 h-3.5 text-[#155EEF]" /> Accuracy
           </span>
-          <span className="text-2xl font-bold font-mono text-cyan-300 mt-1">
+          <span className="text-3xl font-bold text-[#1E293B] mt-2 font-mono">
             {accuracyPct}%
           </span>
-          <span className="text-[10px] text-neutral-500 mt-0.5">
-            {metrics.correctCount} / {metrics.totalCount} correct
+          <span className="text-xs text-[#64748B] mt-1">
+            {metrics.correctCount} of {metrics.totalCount} matches
           </span>
         </div>
 
-        <div className="bg-neutral-900/80 border border-neutral-800 rounded-xl p-4 flex flex-col items-center">
-          <span className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
-            <Zap className="w-3 h-3 text-amber-400" /> Avg Speed
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 flex flex-col shadow-xs">
+          <span className="text-xs font-semibold text-[#64748B] flex items-center gap-1.5 uppercase tracking-wider">
+            <Zap className="w-3.5 h-3.5 text-[#0E9F9A]" /> Average Speed
           </span>
-          <span className="text-2xl font-bold font-mono text-amber-300 mt-1">
+          <span className="text-3xl font-bold text-[#1E293B] mt-2 font-mono">
             {metrics.averageLatencyMs}ms
           </span>
-          <span className="text-[10px] text-neutral-500 mt-0.5">per cue card</span>
+          <span className="text-xs text-[#64748B] mt-1">mean recall delay</span>
         </div>
 
-        <div className="bg-neutral-900/80 border border-neutral-800 rounded-xl p-4 flex flex-col items-center">
-          <span className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
-            <Clock className="w-3 h-3 text-emerald-400" /> Best Pace
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 flex flex-col shadow-xs">
+          <span className="text-xs font-semibold text-[#64748B] flex items-center gap-1.5 uppercase tracking-wider">
+            <Clock className="w-3.5 h-3.5 text-[#16A34A]" /> Peak Reflex
           </span>
-          <span className="text-2xl font-bold font-mono text-emerald-300 mt-1">
+          <span className="text-3xl font-bold text-[#16A34A] mt-2 font-mono">
             {metrics.fastestLatencyMs}ms
           </span>
-          <span className="text-[10px] text-neutral-500 mt-0.5">fastest reflex</span>
+          <span className="text-xs text-[#64748B] mt-1">fastest response</span>
         </div>
 
-        <div className="bg-neutral-900/80 border border-neutral-800 rounded-xl p-4 flex flex-col items-center">
-          <span className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
-            <Clock className="w-3 h-3 text-rose-400" /> Slowest
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 flex flex-col shadow-xs">
+          <span className="text-xs font-semibold text-[#64748B] flex items-center gap-1.5 uppercase tracking-wider">
+            <Clock className="w-3.5 h-3.5 text-[#DC2626]" /> Max Latency
           </span>
-          <span className="text-2xl font-bold font-mono text-rose-300 mt-1">
+          <span className="text-3xl font-bold text-[#1E293B] mt-2 font-mono">
             {metrics.slowestLatencyMs}ms
           </span>
-          <span className="text-[10px] text-neutral-500 mt-0.5">max latency</span>
+          <span className="text-xs text-[#64748B] mt-1">slowest response</span>
         </div>
       </div>
 
-      {/* Trial-by-Trial Card Breakdown */}
-      <div className="bg-neutral-900/70 border border-neutral-800 rounded-2xl p-5 flex flex-col gap-3">
-        <h3 className="text-xs font-mono uppercase tracking-wider text-neutral-400">
-          Response Breakdown ({trials.length} trials)
-        </h3>
-        <div className="divide-y divide-neutral-800/80 max-h-72 overflow-y-auto pr-1">
-          {trials.map((t, idx) => {
-            const m = MAJOR_SYSTEM_MAPPINGS.find((item) => item.digit === t.digit);
-            return (
-              <div
-                key={idx}
-                className="py-2.5 flex items-center justify-between text-xs font-mono"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      t.isCorrect
-                        ? "bg-emerald-950/80 text-emerald-400 border border-emerald-500/40"
-                        : "bg-rose-950/80 text-rose-400 border border-rose-500/40"
-                    }`}
-                  >
-                    {t.isCorrect ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
-                  </div>
-                  <span className="text-neutral-200 font-bold text-sm">
-                    {t.digit}
-                  </span>
-                  <span className="text-neutral-500">?</span>
-                  <span className={t.isCorrect ? "text-emerald-400" : "text-rose-400"}>
-                    {t.timedOut ? "(Timeout)" : `"${t.userRawInput || " "}"`}
-                  </span>
-                </div>
+      {/* Trial Breakdown Table */}
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-xs flex flex-col gap-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">
+          <h3 className="text-sm font-bold text-[#0B1F3A] flex items-center gap-2">
+            <FileText className="w-4 h-4 text-[#155EEF]" /> Detailed Audit Log ({trials.length} trials)
+          </h3>
+          <span className="text-xs text-[#64748B]">All responses recorded</span>
+        </div>
 
-                <div className="flex items-center gap-4 text-neutral-400">
-                  <span className="text-[11px] text-neutral-500">
-                    expected: {m?.primaryLetters}
-                  </span>
-                  <span className="text-[11px] text-neutral-300 font-mono">
-                    {t.latencyMs}ms
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-[#F1F5F9] text-[#64748B] font-semibold">
+                <th className="pb-3 pl-2">STATUS</th>
+                <th className="pb-3">CUE DIGIT</th>
+                <th className="pb-3">SUBMITTED</th>
+                <th className="pb-3">APPROVED SOUNDS</th>
+                <th className="pb-3 text-right pr-2">LATENCY</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F1F5F9]">
+              {trials.map((t, idx) => {
+                const m = MAJOR_SYSTEM_MAPPINGS.find((item) => item.digit === t.digit);
+                return (
+                  <tr key={idx} className="hover:bg-[#F8FAFC] transition-colors">
+                    <td className="py-3 pl-2">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${
+                        t.isCorrect
+                          ? "bg-[#DCFCE7] text-[#16A34A]"
+                          : "bg-[#FEF2F2] text-[#DC2626]"
+                      }`}>
+                        {t.isCorrect ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                        {t.isCorrect ? "Verified" : t.timedOut ? "Timeout" : "Non-Compliant"}
+                      </span>
+                    </td>
+                    <td className="py-3 font-mono font-bold text-sm text-[#0B1F3A]">
+                      {t.digit}
+                    </td>
+                    <td className="py-3 font-mono text-[#1E293B]">
+                      {t.userRawInput ? `"${t.userRawInput}"` : "—"}
+                    </td>
+                    <td className="py-3 text-[#64748B] font-medium">
+                      {m?.primaryLetters}
+                    </td>
+                    <td className="py-3 text-right pr-2 font-mono text-[#1E293B]">
+                      {t.latencyMs}ms
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Action Restart Button */}
+      {/* Action Button */}
       <button
         type="button"
         onClick={onRestart}
-        className="w-full py-4 rounded-xl font-mono font-bold tracking-wider uppercase text-neutral-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(6,182,212,0.4)] cursor-pointer active:scale-[0.99]"
+        className="w-full py-4 rounded-xl font-semibold text-base text-white bg-[#155EEF] hover:bg-[#124bbf] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-[0.99]"
       >
-        <RefreshCw className="w-5 h-5 fill-neutral-950" /> Start New Session
+        <RotateCcw className="w-4 h-4" /> Initiate Another Inspection Run
       </button>
     </div>
   );
