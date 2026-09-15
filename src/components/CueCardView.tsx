@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { SessionState } from "../engine/sessionStateMachine";
-import { MAJOR_SYSTEM_MAPPINGS } from "../domain/majorSystem";
+import { MAJOR_SYSTEM_MAPPINGS, normalizeAnswer, validateMajorDigit } from "../domain/majorSystem";
 
 interface CueCardViewProps {
   readonly state: SessionState;
@@ -20,6 +20,7 @@ export const CueCardView = ({
 }: CueCardViewProps) => {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<number | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [perCardRemainingMs, setPerCardRemainingMs] = useState<number | null>(null);
 
@@ -27,13 +28,19 @@ export const CueCardView = ({
   const mapping = MAJOR_SYSTEM_MAPPINGS.find((m) => m.digit === currentDigit);
   const feedback = state.lastTrialFeedback;
 
+  // Auto-focus input and reset state on card advance
   useEffect(() => {
     if (state.phase === "in_progress") {
       setInputValue("");
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
       inputRef.current?.focus();
     }
   }, [state.currentIndex, state.phase]);
 
+  // Unified Monotonic Timer Loop
   useEffect(() => {
     if (state.phase !== "in_progress") return;
 
@@ -68,18 +75,74 @@ export const CueCardView = ({
     onTimeout,
   ]);
 
+  // Auto-advance feedback after 700ms
   useEffect(() => {
     if (state.phase === "feedback") {
       const timer = setTimeout(() => {
         onAdvance();
-      }, 850);
+      }, 700);
       return () => clearTimeout(timer);
     }
   }, [state.phase, onAdvance]);
 
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    setInputValue(rawVal);
+
+    if (state.phase !== "in_progress" || !rawVal.trim()) return;
+
+    // Clear any existing short debounce
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    const norm = normalizeAnswer(rawVal);
+    const isValid = validateMajorDigit(currentDigit, rawVal);
+
+    // Check if the current typed letters could be the start of a multi-letter token (e.g. "s" -> "sh", "c" -> "ch")
+    const couldBePrefixOfMultiLetter = mapping?.acceptedTokens.some(
+      (token) => token.length > norm.length && token.startsWith(norm)
+    );
+
+    // 1. If valid and not a prefix of a longer accepted sound (or is already 2+ chars), submit immediately!
+    if (isValid && !couldBePrefixOfMultiLetter) {
+      onSubmit(rawVal);
+      return;
+    }
+
+    // 2. If it is valid but could be an incomplete multi-letter cluster (like typing "s" for "sh" on digit 6),
+    // wait 300ms. If no second letter is typed, submit.
+    if (isValid && couldBePrefixOfMultiLetter) {
+      debounceTimerRef.current = window.setTimeout(() => {
+        onSubmit(rawVal);
+      }, 300);
+      return;
+    }
+
+    // 3. If invalid and user typed an explicit single or multi-letter entry that cannot form any valid token,
+    // evaluate after a brief 450ms hesitation pause (or user can still press Enter immediately)
+    debounceTimerRef.current = window.setTimeout(() => {
+      onSubmit(rawVal);
+    }, 450);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (state.phase !== "in_progress") return;
+    if (state.phase !== "in_progress" || !inputValue.trim()) return;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
     onSubmit(inputValue);
   };
 
@@ -189,17 +252,20 @@ export const CueCardView = ({
             ref={inputRef}
             type="text"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={handleInputChange}
             disabled={isFeedback}
-            placeholder="Type consonant sound (e.g. t, d)..."
+            placeholder="Type consonant sound (instant check)..."
             autoComplete="off"
             autoCapitalize="off"
             spellCheck="false"
-            className="w-full bg-white border-2 border-[#CBD5E1] focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10 text-center text-xl font-mono py-4 px-6 rounded-xl outline-none transition-all placeholder:text-[#94A3B8] disabled:bg-[#F8FAFC]"
+            className="w-full bg-white border-2 border-[#CBD5E1] focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10 text-center text-2xl font-mono font-bold py-4 px-6 rounded-xl outline-none transition-all placeholder:text-[#94A3B8] placeholder:font-normal placeholder:text-base disabled:bg-[#F8FAFC]"
           />
         </div>
         <div className="flex items-center justify-between text-xs text-[#64748B] px-1">
-          <span>Press <strong>Enter</strong> to verify</span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-[#16A34A] inline-block animate-pulse" />
+            Instant verification active &middot; No Enter required
+          </span>
           <span>{mapping?.hint}</span>
         </div>
       </form>
