@@ -1,0 +1,21 @@
+{
+  "topology": {
+    "root": "c:/Users/rmelamed/Projects/memory-training",
+    "git": {
+      "initialized": false,
+      "remoteUrl": "https://github.com/ranimela/memory-training.git",
+      "remoteReachable": true
+    },
+    "directories": {
+      ".agents": "Agent system rules and workflows",
+      ".plans": "Architectural specifications and plans",
+      "src": "Application source code (currently empty)"
+    },
+    "techStackDecision": {
+      "framework": "React 19 + TypeScript (Vite)",
+      "styling": "Tailwind CSS v4",
+      "aesthetic": "Cyber/Arcade Dark Mode (high-contrast, neon accents)",
+      "stateManagement": "Decoupled pure state machine / reducer"
+    }
+  }
+}
