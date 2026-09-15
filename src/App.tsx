@@ -10,10 +10,12 @@ import {
 import { SetupView } from "./components/SetupView";
 import { CueCardView } from "./components/CueCardView";
 import { ScoreView } from "./components/ScoreView";
+import { StandardsGuideModal } from "./components/StandardsGuideModal";
 import { ShieldCheck, BarChart2, BookOpen, Layers } from "lucide-react";
 
 export function App() {
   const [session, setSession] = useState<SessionState | null>(null);
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
 
   const handleStart = useCallback((config: SessionConfig) => {
     const initialized = initSession(config);
@@ -79,9 +81,13 @@ export function App() {
             <span className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
               <BarChart2 className="w-4 h-4 text-[#0E9F9A]" /> Audit Logs
             </span>
-            <span className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setIsGuideOpen(true)}
+              className="flex items-center gap-1.5 text-[#CBD5E1] hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-xs font-medium"
+            >
               <BookOpen className="w-4 h-4 text-[#0E9F9A]" /> Standards Guide
-            </span>
+            </button>
           </div>
         </div>
       </header>
@@ -107,6 +113,12 @@ export function App() {
         )}
       </main>
 
+      {/* Standards Guide Modal */}
+      <StandardsGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+      />
+
       {/* Footer */}
       <footer className="bg-white border-t border-[#E2E8F0] py-4 px-6 text-xs text-[#64748B]">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -115,7 +127,7 @@ export function App() {
             <span className="text-[#16A34A] font-semibold flex items-center gap-1">
               &bull; Monotonic Clock Synced
             </span>
-            <span>v1.1.0</span>
+            <span>v1.2.0</span>
           </div>
         </div>
       </footer>
